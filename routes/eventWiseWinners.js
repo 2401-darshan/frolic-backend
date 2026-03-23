@@ -10,7 +10,7 @@ router.patch("/:id", authMiddleware, async (req, res) => {
     try{
         const { id } = req.params;
         const { sequence } = req.body;
-        const userId = req.user._id;
+        const userId = req.user.id;
         const isAdmin = req.user.isAdmin;
         
         if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -27,8 +27,9 @@ router.patch("/:id", authMiddleware, async (req, res) => {
           return res.status(404).json({ message: "Event not found" });
         }
 
-        const isEventCoordinator =
-          event.EventCoOrdinatorID.toString() === userId.toString();
+        const isEventCoordinator = event && event.EventCoOrdinatorID 
+          ? event.EventCoOrdinatorID.toString() === userId.toString()
+          : false;
 
         if (!isAdmin && !isEventCoordinator) {
           return res.status(403).json({

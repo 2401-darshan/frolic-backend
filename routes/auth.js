@@ -77,7 +77,7 @@ router.post("/login", async(req,res)=>{
             maxAge: 30*60*1000
         });
 
-        res.status(200).json({message: "Login Successfully"});
+        res.status(200).json({message: "Login Successfully", token});
     }
     catch(err){
         res.status(500).json({message: "Internal Server Error"});

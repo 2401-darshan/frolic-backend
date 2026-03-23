@@ -10,7 +10,7 @@ const authMiddleware = require("../middleware/authMiddleware");
 router.patch("/:id", authMiddleware, async (req, res) => {
   try {
     const { id } = req.params;
-    const userId = req.user._id;
+    const userId = req.user.id;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({ message: "Invalid Object ID" });
@@ -38,10 +38,13 @@ router.patch("/:id", authMiddleware, async (req, res) => {
       return res.status(404).json({ message: "Event not found" });
     }
 
-    const isEventCoordinator =
-      event.EventCoOrdinatorID.toString() === userId.toString();
+    const isEventCoordinator = event && event.EventCoOrdinatorID 
+      ? event.EventCoOrdinatorID.toString() === userId.toString()
+      : false;
 
-    if (!isGroupLeader && !isEventCoordinator) {
+    const isAdmin = req.user.isAdmin;
+
+    if (!isAdmin && !isGroupLeader && !isEventCoordinator) {
       return res.status(403).json({ message: "Unauthorized" });
     }
 
@@ -77,7 +80,7 @@ router.patch("/:id", authMiddleware, async (req, res) => {
 router.delete("/:id", authMiddleware, async(req,res)=>{
   try{
     const {id}=req.params;
-    const userId=req.user._id;
+    const userId=req.user.id;
     
     if (!mongoose.Types.ObjectId.isValid(id)) {
         return res.status(400).json({message: "Invalid Object ID"});
@@ -104,8 +107,13 @@ router.delete("/:id", authMiddleware, async(req,res)=>{
         return res.status(404).json({message: "Event not found"});
     }
 
-    const isEventCoOrdinator=event.EventCoOrdinatorID.toString()===userId.toString();
-    if (!isGroupLeader && !isEventCoOrdinator) {
+    const isEventCoOrdinator = event && event.EventCoOrdinatorID 
+      ? event.EventCoOrdinatorID.toString() === userId.toString()
+      : false;
+    
+    const isAdmin = req.user.isAdmin;
+    
+    if (!isAdmin && !isGroupLeader && !isEventCoOrdinator) {
         return res.status(403).json({message: "Unauthorized"});
     }
 

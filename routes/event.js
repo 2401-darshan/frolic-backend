@@ -11,7 +11,7 @@ const EventWiseWinners=require("../models/eventWiseWinner");
 
 router.get("/", authMiddleware,async(req,res)=>{
     try{
-        const events=await Event.find();
+        const events=await Event.find().populate("EventCoOrdinatorID", "UserName");
 
         res.status(200).json({events});
     }
@@ -144,6 +144,7 @@ router.post("/", authMiddleware, async(req,res)=>{
         res.status(200).json({message: "Event created successfully", event});
     }
     catch(err){
+        console.error("Create event error:", err);
         res.status(500).json({message: "Internal Server Error"});
     }
 })
@@ -223,6 +224,7 @@ router.patch("/:id", authMiddleware, async(req,res)=>{
         res.status(200).json({message: "Event updated successfully", updatedEvent});
     }
     catch(err){
+        console.error("Update event error:", err);
         res.status(500).json({message:"Internal Server Error"});
     }
 })
@@ -260,12 +262,6 @@ router.get("/:id/groups", authMiddleware, async(req,res)=>{
             return res.status(404).json({message: "Event not found"});
         }
 
-        const isAdmin=req.user.isAdmin;
-        const isEventCoOrdinator=event.EventCoOrdinatorID.toString()===req.user.id;
-
-        if (!isAdmin && !isEventCoOrdinator) {
-            return res.status(403).json({message:"Unauthorized"});
-        }
 
         const groups=await Group.find({EventID: id}).select("-__v");
 
@@ -345,7 +341,7 @@ router.post("/:id/winners", authMiddleware, async(req,res)=>{
     try{
         const {id}=req.params;
         const {GroupID, sequence}=req.body;
-        const userID=req.user._id;
+        const userID=req.user.id;
         const isAdmin=req.user.isAdmin;
 
         if (

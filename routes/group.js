@@ -182,6 +182,7 @@ router.post("/:id/participants", authMiddleware, async(req,res)=>{
             ParticipantCity,
             ParticipantMobile,
             ParticipantEmail,
+            IsGroupLeader,
         }=req.body;
 
         if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -192,18 +193,23 @@ router.post("/:id/participants", authMiddleware, async(req,res)=>{
             return res.status(400).json({message: "ParticipantName and ParticipantEnrollment are required"});
         }
 
-        const group=await Group.findById(id);
+        const group=await Group.findById(id).populate("EventID", "EventCoOrdinatorID");
         if (!group) {
             return res.status(404).json({message: "Group not found"});
         }
 
+        const isAdmin = req.user.isAdmin;
         const isGroupLeader=await Participant.exists({
             GroupID: id,
             IsGroupLeader: true,
             ModifiedBy: req.user.id
         });
 
-        if (!isGroupLeader) {
+        const isEventCoOrdinator = group.EventID && group.EventID.EventCoOrdinatorID 
+            ? group.EventID.EventCoOrdinatorID.toString() === req.user.id 
+            : false;
+
+        if (!isAdmin && !isGroupLeader && !isEventCoOrdinator) {
             return res.status(403).json({message: "Unauthorized"});
         }
 
@@ -222,7 +228,7 @@ router.post("/:id/participants", authMiddleware, async(req,res)=>{
             ParticipantCity,
             ParticipantMobile,
             ParticipantEmail,
-            IsGroupLeader: false,        
+            IsGroupLeader: IsGroupLeader || false,        
             GroupID: id,
             ModifiedBy: req.user.id
         });

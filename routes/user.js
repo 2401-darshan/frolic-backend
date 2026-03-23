@@ -5,7 +5,7 @@ const authMiddleware=require("../middleware/authMiddleware");
 const selfOrAdminMiddleware=require("../middleware/selfOrAdminMiddleware");
 const adminOnlyMiddleware = require("../middleware/adminOnlyMiddleware");
 
-router.get("/", authMiddleware, adminOnlyMiddleware,async(req,res)=>{
+router.get("/", authMiddleware, async(req,res)=>{
     try{
         const users= await User.find().select("-UserPassword");
 
